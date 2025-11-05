@@ -250,7 +250,7 @@ function createDocxTable(tableData: TableData): Table {
       new TableCell({
         children: [
           new Paragraph({
-            children: processInlineFormatting(header),
+            children: processInlineFormattingWhite(header),
             alignment: getAlignment(alignments[index]),
           }),
         ],
@@ -309,6 +309,82 @@ function createDocxTable(tableData: TableData): Table {
       insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'E5E7EB' },
     },
   });
+}
+
+function processInlineFormattingWhite(text: string): TextRun[] {
+  const runs: TextRun[] = [];
+  let currentText = '';
+  let i = 0;
+
+  while (i < text.length) {
+    if (text[i] === '*' && text[i + 1] === '*') {
+      if (currentText) {
+        runs.push(new TextRun({ text: currentText, color: 'FFFFFF' }));
+        currentText = '';
+      }
+
+      i += 2;
+      let boldText = '';
+      while (i < text.length - 1) {
+        if (text[i] === '*' && text[i + 1] === '*') {
+          runs.push(new TextRun({ text: boldText, bold: true, color: 'FFFFFF' }));
+          i += 2;
+          break;
+        }
+        boldText += text[i];
+        i++;
+      }
+    } else if (text[i] === '*') {
+      if (currentText) {
+        runs.push(new TextRun({ text: currentText, color: 'FFFFFF' }));
+        currentText = '';
+      }
+
+      i += 1;
+      let italicText = '';
+      while (i < text.length) {
+        if (text[i] === '*') {
+          runs.push(new TextRun({ text: italicText, italics: true, color: 'FFFFFF' }));
+          i += 1;
+          break;
+        }
+        italicText += text[i];
+        i++;
+      }
+    } else if (text[i] === '`') {
+      if (currentText) {
+        runs.push(new TextRun({ text: currentText, color: 'FFFFFF' }));
+        currentText = '';
+      }
+
+      i += 1;
+      let codeText = '';
+      while (i < text.length) {
+        if (text[i] === '`') {
+          runs.push(
+            new TextRun({
+              text: codeText,
+              font: 'Courier New',
+              color: 'FFFFFF',
+            })
+          );
+          i += 1;
+          break;
+        }
+        codeText += text[i];
+        i++;
+      }
+    } else {
+      currentText += text[i];
+      i++;
+    }
+  }
+
+  if (currentText) {
+    runs.push(new TextRun({ text: currentText, color: 'FFFFFF' }));
+  }
+
+  return runs.length > 0 ? runs : [new TextRun({ text, color: 'FFFFFF' })];
 }
 
 function processInlineFormatting(text: string): TextRun[] {
